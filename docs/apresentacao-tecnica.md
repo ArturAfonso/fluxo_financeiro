@@ -47,9 +47,9 @@ a fonte local canônica para todas as telas.
 ## Evidências rápidas
 
 - `flutter analyze` sem issues;
-- 76 testes automatizados previstos na CI; no host atual, 70 passam e 6 testes
+- 77 testes automatizados previstos na CI; no host atual, 71 passam e 6 testes
   Drift são ignorados pela ausência da biblioteca nativa SQLite;
 - fluxo instrumentado passando no emulador Android;
-- domínio com 76,50% e ViewModels com 83,25% de cobertura;
+- domínio com 76,60% e ViewModels com 82,05% de cobertura;
 - APK release ofuscado com símbolos separados;
 - CI com formatação, análise, testes, cobertura mínima e build Android.

@@ -98,7 +98,9 @@ void main() {
     expect(ledger.openingBalance, snapshot.openingBalance);
     expect(ledger.lastSynchronizedAt, now.subtract(const Duration(hours: 1)));
     expect(ledger.isStale, isTrue);
-    verify(() => remote.fetchLedger()).called(1);
+    verify(
+      () => remote.fetchLedger(cancelToken: any(named: 'cancelToken')),
+    ).called(1);
   });
 
   test('preenche cache vazio antes de devolver o snapshot', () async {
@@ -111,7 +113,7 @@ void main() {
           : CachedLedger(snapshot: snapshot, cachedAt: now);
     });
     when(
-      () => remote.fetchLedger(),
+      () => remote.fetchLedger(cancelToken: any(named: 'cancelToken')),
     ).thenAnswer((_) async => ledgerDtoFixture());
     when(() => local.replaceLedger(any(), any())).thenAnswer((_) async {});
 
@@ -124,13 +126,17 @@ void main() {
     expect(ledger.openingBalance, snapshot.openingBalance);
     expect(ledger.lastSynchronizedAt, now);
     expect(ledger.isStale, isFalse);
-    verify(() => remote.fetchLedger()).called(1);
+    verify(
+      () => remote.fetchLedger(cancelToken: any(named: 'cancelToken')),
+    ).called(1);
     verify(() => local.replaceLedger(any(), now)).called(1);
   });
 
   test('consolida refreshes simultâneos na mesma chamada remota', () async {
     final completer = Completer<LedgerDto>();
-    when(() => remote.fetchLedger()).thenAnswer((_) => completer.future);
+    when(
+      () => remote.fetchLedger(cancelToken: any(named: 'cancelToken')),
+    ).thenAnswer((_) => completer.future);
     when(() => local.replaceLedger(any(), any())).thenAnswer((_) async {});
 
     final first = repository.refresh();
@@ -140,14 +146,47 @@ void main() {
     expect(identical(first, second), isTrue);
     expect(await first, const Success<void>(null));
     expect(await second, const Success<void>(null));
-    verify(() => remote.fetchLedger()).called(1);
+    verify(
+      () => remote.fetchLedger(cancelToken: any(named: 'cancelToken')),
+    ).called(1);
+  });
+
+  test('cancela refresh obsoleto quando uma atualização o substitui', () async {
+    late CancelToken firstToken;
+    var calls = 0;
+    when(
+      () => remote.fetchLedger(cancelToken: any(named: 'cancelToken')),
+    ).thenAnswer((invocation) {
+      final token = invocation.namedArguments[#cancelToken] as CancelToken;
+      calls++;
+      if (calls == 1) {
+        firstToken = token;
+        return token.whenCancel.then<LedgerDto>((error) => throw error);
+      }
+      return Future.value(ledgerDtoFixture());
+    });
+    when(() => local.replaceLedger(any(), any())).thenAnswer((_) async {});
+
+    final obsolete = repository.refresh();
+    final latest = repository.refresh(replaceInFlight: true);
+
+    expect(firstToken.isCancelled, isTrue);
+    expect(
+      await obsolete,
+      const FailureResult<void>(RequestCancelledFailure()),
+    );
+    expect(await latest, const Success<void>(null));
+    verify(
+      () => remote.fetchLedger(cancelToken: any(named: 'cancelToken')),
+    ).called(2);
+    verify(() => local.replaceLedger(any(), now)).called(1);
   });
 
   test(
     'converte payload inválido em ParsingFailure sem gravar cache',
     () async {
       when(
-        () => remote.fetchLedger(),
+        () => remote.fetchLedger(cancelToken: any(named: 'cancelToken')),
       ).thenAnswer((_) async => ledgerDtoFixture(type: 'unknown'));
 
       final result = await repository.refresh();
@@ -159,7 +198,9 @@ void main() {
 
   test('converte HTTP 429 esgotado em RateLimitFailure', () async {
     final headers = Headers()..set('retry-after', '30');
-    when(() => remote.fetchLedger()).thenThrow(
+    when(
+      () => remote.fetchLedger(cancelToken: any(named: 'cancelToken')),
+    ).thenThrow(
       DioException.badResponse(
         statusCode: 429,
         requestOptions: RequestOptions(),
@@ -206,7 +247,9 @@ void main() {
     when(local.getLedger).thenAnswer(
       (_) async => CachedLedger(snapshot: ledgerFixture(), cachedAt: cachedAt),
     );
-    when(() => remote.fetchLedger()).thenThrow(
+    when(
+      () => remote.fetchLedger(cancelToken: any(named: 'cancelToken')),
+    ).thenThrow(
       DioException(
         requestOptions: RequestOptions(),
         type: DioExceptionType.connectionError,

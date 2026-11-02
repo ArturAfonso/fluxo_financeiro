@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('falhas possuem códigos estáveis e igualdade por seus dados', () {
     expect(const NetworkFailure().code, 'network');
+    expect(const RequestCancelledFailure().code, 'request_cancelled');
     expect(const OfflineFailure().code, 'offline');
     expect(const CacheFailure().code, 'cache');
     expect(const ParsingFailure().code, 'parsing');

@@ -73,7 +73,10 @@ void main() {
       when(() => repository.getTransactionById(_transaction.id)).thenAnswer(
         (_) async => Success(TransactionDetails(transaction: _transaction)),
       );
-      when(repository.refresh).thenAnswer((_) async => const Success(null));
+      when(
+        () =>
+            repository.refresh(replaceInFlight: any(named: 'replaceInFlight')),
+      ).thenAnswer((_) async => const Success(null));
 
       final preferences = _Preferences();
       getIt

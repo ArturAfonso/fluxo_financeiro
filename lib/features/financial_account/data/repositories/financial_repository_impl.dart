@@ -27,6 +27,7 @@ final class FinancialRepositoryImpl implements FinancialRepository {
   final RepositoryClock clock;
 
   Future<Result<void>>? _refreshInFlight;
+  CancelToken? _refreshCancelToken;
 
   @override
   Future<Result<LedgerSnapshot>> getLedgerSnapshot() async {
@@ -129,24 +130,32 @@ final class FinancialRepositoryImpl implements FinancialRepository {
   }
 
   @override
-  Future<Result<void>> refresh() {
+  Future<Result<void>> refresh({bool replaceInFlight = false}) {
     final inFlight = _refreshInFlight;
-    if (inFlight != null) {
+    if (inFlight != null && !replaceInFlight) {
       return inFlight;
     }
+    if (inFlight != null) {
+      _refreshCancelToken?.cancel(
+        'Requisição substituída por uma mais recente.',
+      );
+    }
+    final cancelToken = CancelToken();
+    _refreshCancelToken = cancelToken;
     late final Future<Result<void>> operation;
-    operation = _performRefresh().whenComplete(() {
+    operation = _performRefresh(cancelToken).whenComplete(() {
       if (identical(_refreshInFlight, operation)) {
         _refreshInFlight = null;
+        _refreshCancelToken = null;
       }
     });
     _refreshInFlight = operation;
     return operation;
   }
 
-  Future<Result<void>> _performRefresh() async {
+  Future<Result<void>> _performRefresh(CancelToken cancelToken) async {
     try {
-      final dto = await remoteDataSource.fetchLedger();
+      final dto = await remoteDataSource.fetchLedger(cancelToken: cancelToken);
       final snapshot = dto.toDomain();
       await localDataSource.replaceLedger(snapshot, clock());
       return const Success(null);
@@ -197,6 +206,9 @@ final class FinancialRepositoryImpl implements FinancialRepository {
   }
 
   Failure _mapDioFailure(DioException error) {
+    if (CancelToken.isCancel(error)) {
+      return const RequestCancelledFailure();
+    }
     final statusCode = error.response?.statusCode;
     if (statusCode == 429) {
       final seconds = int.tryParse(

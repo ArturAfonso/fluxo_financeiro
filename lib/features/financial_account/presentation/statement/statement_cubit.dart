@@ -145,13 +145,17 @@ final class StatementCubit extends Cubit<StatementState> {
 
   Future<void> refresh() async {
     emit(_copy(isRefreshing: true, clearFailure: true));
-    final result = await refreshFinancialData();
+    final result = await refreshFinancialData(replaceInFlight: true);
     final failed = result.fold(onSuccess: (_) => false, onFailure: (_) => true);
     if (failed) {
       final failure = result.fold<Failure?>(
         onSuccess: (_) => null,
         onFailure: (value) => value,
       );
+      if (failure is RequestCancelledFailure) {
+        emit(_copy(isRefreshing: false));
+        return;
+      }
       emit(_copy(isRefreshing: false, failure: failure));
       return;
     }

@@ -123,12 +123,16 @@ void main() {
   });
 
   test('RefreshFinancialData encaminha a atualização', () async {
-    when(repository.refresh).thenAnswer((_) async => const Success(null));
+    when(
+      () => repository.refresh(replaceInFlight: any(named: 'replaceInFlight')),
+    ).thenAnswer((_) async => const Success(null));
 
-    final result = await RefreshFinancialData(repository)();
+    final result = await RefreshFinancialData(repository)(
+      replaceInFlight: true,
+    );
 
     expect(result, const Success<void>(null));
-    verify(repository.refresh).called(1);
+    verify(() => repository.refresh(replaceInFlight: true)).called(1);
   });
 }
 

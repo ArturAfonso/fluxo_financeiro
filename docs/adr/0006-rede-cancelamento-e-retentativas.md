@@ -12,8 +12,9 @@ deduplicação e tratamento de HTTP 429 com backoff exponencial.
 
 - Usar `dio` como cliente HTTP.
 - Configurar timeouts e interceptadores em um único ponto.
-- Usar `CancelToken` para buscas e requisições substituídas por intenções mais
-  recentes.
+- Propagar `CancelToken` do repositório até o datasource remoto. Atualizações
+  equivalentes compartilham a mesma operação em andamento; uma atualização
+  manual mais recente cancela e substitui a anterior.
 - Implementar internamente uma política testável de retry para operações
   idempotentes, respeitando `Retry-After`, limite de tentativas, backoff
   exponencial, jitter e cancelamento.
@@ -23,4 +24,5 @@ deduplicação e tratamento de HTTP 429 com backoff exponencial.
 
 Não será adicionada uma biblioteca automática de retry. A deduplicação será
 definida no repositório ou coordenador de requisições, onde a chave semântica da
-consulta é conhecida.
+consulta é conhecida. Cancelamentos são traduzidos para uma falha tipada e não
+são apresentados ao usuário como erro de conectividade.

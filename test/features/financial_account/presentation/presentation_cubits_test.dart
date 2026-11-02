@@ -104,7 +104,7 @@ void main() {
       () => repository.getTransactions(any()),
     ).thenAnswer((_) async => Success(TransactionPage(items: [_transaction])));
     when(
-      repository.refresh,
+      () => repository.refresh(replaceInFlight: any(named: 'replaceInFlight')),
     ).thenAnswer((_) async => const FailureResult(OfflineFailure()));
     final cubit = DashboardCubit(
       getAccountSummary: GetAccountSummary(repository: repository),

@@ -11,5 +11,5 @@ abstract interface class FinancialRepository {
 
   Future<Result<TransactionDetails>> getTransactionById(String id);
 
-  Future<Result<void>> refresh();
+  Future<Result<void>> refresh({bool replaceInFlight = false});
 }

@@ -37,7 +37,7 @@ para sua implementação, seus testes e sua documentação.
 | RD-05 | Cache dos últimos dados conhecidos | Concluído na camada de dados |
 | RD-06 | Sinalizar dados possivelmente desatualizados | Concluído com banner, instante da sincronização e nova tentativa |
 | RD-07 | Deduplicar chamadas equivalentes | Concluído para sincronização |
-| RD-08 | Cancelar requisições obsoletas | Concluído na fonte remota |
+| RD-08 | Cancelar requisições obsoletas | Concluído com `CancelToken` propagado pelo repositório e substituição de refresh manual |
 | RD-09 | Tratar HTTP 429 com retentativa e backoff exponencial | Concluído |
 | RD-10 | Garantir fonte única de verdade entre todas as telas | Concluído |
 | RD-11 | Fazer parsing defensivo das respostas | Concluído |
@@ -55,7 +55,7 @@ para sua implementação, seus testes e sua documentação.
 | RT-ARQ-07 | Aplicar injeção e inversão de dependência | Concluído |
 | RT-ARQ-08 | Usar estados imutáveis e justificar a biblioteca escolhida | Concluído |
 | RT-ARQ-09 | Modelar erros com Result/Either ou hierarquia equivalente | Concluído |
-| RT-ARQ-10 | Manter lint rigoroso e zero warnings | Concluído |
+| RT-ARQ-10 | Manter lint rigoroso e zero warnings | Concluído com `flutter_lints`, modos estritos do analyzer e regras adicionais |
 
 ## Integridade financeira e temporal
 
@@ -89,7 +89,7 @@ para sua implementação, seus testes e sua documentação.
 | RQ-01 | Testar domínio, ViewModels e repositórios com mocks | Concluído |
 | RQ-02 | Testar widgets principais em loading, vazio e erro | Concluído |
 | RQ-03 | Ter ao menos um teste de integração do fluxo principal | Concluído |
-| RQ-04 | Atingir 70% de cobertura em domínio e ViewModels | Concluído; 76,50% e 83,25% |
+| RQ-04 | Atingir 70% de cobertura em domínio e ViewModels | Concluído; 76,60% e 82,05% |
 | RQ-05 | Gerar e entregar relatório de cobertura | Concluído em `docs/coverage.md` |
 | RQ-06 | Usar listas lazy, `const` e rebuilds controlados | Concluído |
 | RQ-07 | Oferecer semântica, contraste e escala de fonte adequados | Concluído |
@@ -101,7 +101,7 @@ para sua implementação, seus testes e sua documentação.
 | ID | Entregável | Estado |
 |---|---|---|
 | RE-01 | Repositório Git público com histórico coeso | Concluído |
-| RE-02 | APK Android de release | Concluído localmente |
+| RE-02 | APK Android de release | Concluído na GitHub Release e no pacote compactado de entrega |
 | RE-03 | README com ambiente, execução, testes e build | Concluído |
 | RE-04 | Diagrama de camadas e fluxo de dados | Concluído em `docs/ARCHITECTURE.md` |
 | RE-05 | ADRs de estado, cache, erros, trade-offs e limitações | Concluído |

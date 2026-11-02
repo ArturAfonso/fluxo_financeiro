@@ -94,8 +94,8 @@ dart run tool/check_coverage.dart coverage/lcov.info
 
 Cobertura medida:
 
-- domínio: 76,50%;
-- ViewModels: 83,25%;
+- domínio: 76,60%;
+- ViewModels: 82,05%;
 - mínimo automatizado: 70% para cada grupo.
 
 O fluxo dashboard → extrato → busca → detalhes → retorno é coberto por teste de
@@ -107,8 +107,8 @@ flutter test integration_test/app_flow_test.dart -d <device-id>
 ```
 
 A CI executa formatação, análise estática, testes, cobertura mínima e build
-Android. Em Linux, a biblioteca `libsqlite3` permite executar também os testes
-reais do cache em memória.
+Android release ofuscado. Em Linux, a biblioteca `libsqlite3` permite executar
+também os testes reais do cache em memória.
 
 ## Build Android
 
@@ -130,6 +130,16 @@ O repositório não contém keystore privado. O APK local de avaliação usa a
 assinatura de desenvolvimento configurada pelo template; uma publicação real
 deve receber assinatura de produção fora do repositório.
 
+O APK pronto para instalação pode ser obtido de duas formas:
+
+- pela [GitHub Release mais recente](https://github.com/ArturAfonso/fluxo_financeiro/releases/latest), inclusive pelo [download direto do APK](https://github.com/ArturAfonso/fluxo_financeiro/releases/latest/download/app-release.apk);
+- no pacote compactado de entrega, em `artifacts/app-release.apk`.
+
+O binário não é versionado no histórico Git para evitar aumentar o tamanho de
+cada clone. A Release preserva o artefato público, enquanto o pacote compactado
+permite uma entrega autocontida quando o avaliador solicitar o projeto em
+arquivo.
+
 ## Documentação
 
 - [Requisitos e rastreabilidade](docs/requisitos.md)
@@ -148,5 +158,7 @@ O enunciado original permanece em
 
 - o backend padrão é uma fixture local e não representa uma instituição real;
 - a sincronização substitui um snapshot completo, adequada ao volume do teste;
+- o cache sem criptografia contém somente fixtures fictícias; um produto real
+  exigiria armazenamento cifrado e chave protegida pelo sistema operacional;
 - o APK de avaliação não inclui uma chave privada de distribuição;
 - testes instrumentados dependem de um dispositivo ou emulador.

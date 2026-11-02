@@ -6,5 +6,6 @@ final class RefreshFinancialData {
 
   final FinancialRepository repository;
 
-  Future<Result<void>> call() => repository.refresh();
+  Future<Result<void>> call({bool replaceInFlight = false}) =>
+      repository.refresh(replaceInFlight: replaceInFlight);
 }

@@ -13,6 +13,10 @@ final class NetworkFailure extends Failure {
   const NetworkFailure() : super('network');
 }
 
+final class RequestCancelledFailure extends Failure {
+  const RequestCancelledFailure() : super('request_cancelled');
+}
+
 final class OfflineFailure extends Failure {
   const OfflineFailure() : super('offline');
 }

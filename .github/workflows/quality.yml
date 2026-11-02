@@ -46,5 +46,8 @@ jobs:
       - name: Validar cobertura mínima
         run: dart run tool/check_coverage.dart coverage/lcov.info
 
-      - name: Validar build Android
-        run: flutter build apk --debug
+      - name: Validar release Android ofuscado
+        run: >-
+          flutter build apk --release
+          --obfuscate
+          --split-debug-info=build/symbols/android

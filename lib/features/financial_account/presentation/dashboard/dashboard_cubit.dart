@@ -125,12 +125,16 @@ final class DashboardCubit extends Cubit<DashboardState> {
 
   Future<void> refresh() async {
     emit(state.copyWith(isRefreshing: true, clearFailure: true));
-    final result = await refreshFinancialData();
+    final result = await refreshFinancialData(replaceInFlight: true);
     final failure = result.fold<Failure?>(
       onSuccess: (_) => null,
       onFailure: (value) => value,
     );
     if (failure != null) {
+      if (failure is RequestCancelledFailure) {
+        emit(state.copyWith(isRefreshing: false));
+        return;
+      }
       emit(state.copyWith(isRefreshing: false, failure: failure));
       return;
     }

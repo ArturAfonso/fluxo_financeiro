@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -17,7 +18,7 @@ final class MockFinancialApiAdapter implements HttpClientAdapter {
     }
     if (cancelFuture != null) {
       var cancelled = false;
-      cancelFuture.then((_) => cancelled = true);
+      unawaited(cancelFuture.then((_) => cancelled = true));
       await Future<void>.delayed(const Duration(milliseconds: 80));
       if (cancelled) {
         throw DioException.requestCancelled(
