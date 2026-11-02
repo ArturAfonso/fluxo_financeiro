@@ -5,6 +5,7 @@ import 'package:fluxo_financeiro/core/result/result.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/entities/financial_transaction.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/entities/ledger_snapshot.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/entities/transaction_page.dart';
+import 'package:fluxo_financeiro/features/financial_account/domain/entities/transaction_details.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/filters/transaction_filter.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/repositories/financial_repository.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/use_cases/get_account_summary.dart';
@@ -86,9 +87,15 @@ void main() {
   testWidgets('extrato apresenta estado vazio e permite limpar filtros', (
     tester,
   ) async {
-    when(
-      () => repository.getTransactions(any()),
-    ).thenAnswer((_) async => Success(TransactionPage(items: const [])));
+    when(() => repository.getTransactions(any())).thenAnswer(
+      (_) async => Success(
+        TransactionPage(
+          items: const [],
+          lastSynchronizedAt: DateTime.utc(2026, 11, 1, 9),
+          isStale: true,
+        ),
+      ),
+    );
     final cubit = StatementCubit(
       getTransactions: GetTransactions(repository),
       refreshFinancialData: RefreshFinancialData(repository),
@@ -105,12 +112,19 @@ void main() {
 
     expect(find.text('Nenhum resultado'), findsOneWidget);
     expect(find.text('Limpar filtros'), findsOneWidget);
+    expect(find.textContaining('podem estar desatualizados'), findsOneWidget);
   });
 
   testWidgets('detalhe cobre loading e dados completos', (tester) async {
-    when(
-      () => repository.getTransactionById('tx-1'),
-    ).thenAnswer((_) async => Success(_transaction));
+    when(() => repository.getTransactionById('tx-1')).thenAnswer(
+      (_) async => Success(
+        TransactionDetails(
+          transaction: _transaction,
+          lastSynchronizedAt: DateTime.utc(2026, 11, 1, 9),
+          isStale: true,
+        ),
+      ),
+    );
     final cubit = TransactionDetailsCubit(
       transactionId: 'tx-1',
       getTransactionDetails: GetTransactionDetails(repository),
@@ -130,7 +144,10 @@ void main() {
 
     expect(find.text('Transferência recebida'), findsOneWidget);
     expect(find.text('Concluída'), findsOneWidget);
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pump();
     expect(find.text('tx-1'), findsOneWidget);
+    expect(find.textContaining('podem estar desatualizados'), findsOneWidget);
   });
 
   testWidgets('dashboard suporta escala de texto ampliada sem exceção', (
@@ -171,6 +188,71 @@ void main() {
 
     expect(themeCubit.state.mode, ThemeMode.dark);
     expect(find.byIcon(Icons.light_mode_outlined), findsOneWidget);
+  });
+
+  testWidgets('dashboard sinaliza cache desatualizado e oferece atualização', (
+    tester,
+  ) async {
+    when(repository.getLedgerSnapshot).thenAnswer(
+      (_) async => Success(
+        _snapshot.withFreshness(
+          lastSynchronizedAt: DateTime.utc(2026, 11, 1, 9),
+          isStale: true,
+        ),
+      ),
+    );
+    when(
+      () => repository.getTransactions(any()),
+    ).thenAnswer((_) async => Success(TransactionPage(items: [_transaction])));
+    final cubit = _dashboardCubit(repository);
+    final themeCubit = ThemeCubit(_Preferences());
+    await cubit.load();
+    addTearDown(cubit.close);
+    addTearDown(themeCubit.close);
+
+    await tester.pumpWidget(
+      _TestApp(
+        providers: [
+          BlocProvider<ThemeCubit>.value(value: themeCubit),
+          BlocProvider<DashboardCubit>.value(value: cubit),
+        ],
+        child: const DashboardScreen(),
+      ),
+    );
+
+    expect(find.textContaining('podem estar desatualizados'), findsOneWidget);
+    expect(find.byTooltip('Tentar atualizar'), findsOneWidget);
+  });
+
+  testWidgets('dashboard agrupa mês completo em períodos semanais', (
+    tester,
+  ) async {
+    when(
+      repository.getLedgerSnapshot,
+    ).thenAnswer((_) async => Success(_snapshot));
+    when(
+      () => repository.getTransactions(any()),
+    ).thenAnswer((_) async => Success(TransactionPage(items: [_transaction])));
+    final cubit = _dashboardCubit(repository);
+    final themeCubit = ThemeCubit(_Preferences());
+    await cubit.load();
+    await cubit.changeMonth(-1);
+    addTearDown(cubit.close);
+    addTearDown(themeCubit.close);
+
+    await tester.pumpWidget(
+      _TestApp(
+        providers: [
+          BlocProvider<ThemeCubit>.value(value: themeCubit),
+          BlocProvider<DashboardCubit>.value(value: cubit),
+        ],
+        child: const DashboardScreen(),
+      ),
+    );
+
+    expect(find.text('Por semana'), findsOneWidget);
+    expect(find.text('01–07'), findsOneWidget);
+    expect(find.text('29–31'), findsOneWidget);
   });
 }
 

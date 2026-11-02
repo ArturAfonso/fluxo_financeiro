@@ -7,6 +7,7 @@ import 'package:fluxo_financeiro/features/financial_account/data/datasources/fin
 import 'package:fluxo_financeiro/features/financial_account/data/datasources/financial_remote_data_source.dart';
 import 'package:fluxo_financeiro/features/financial_account/data/dtos/ledger_dto.dart';
 import 'package:fluxo_financeiro/features/financial_account/data/repositories/financial_repository_impl.dart';
+import 'package:fluxo_financeiro/features/financial_account/domain/entities/transaction_page.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/filters/transaction_filter.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -58,7 +59,13 @@ void main() {
 
     final result = await repository.getLedgerSnapshot();
 
-    expect(result, Success(snapshot));
+    final ledger = result.fold(
+      onSuccess: (value) => value,
+      onFailure: (failure) => throw TestFailure('$failure'),
+    );
+    expect(ledger.openingBalance, snapshot.openingBalance);
+    expect(ledger.lastSynchronizedAt, now.subtract(const Duration(minutes: 2)));
+    expect(ledger.isStale, isFalse);
     verify(local.getLedger).called(1);
     verifyNever(
       () => remote.fetchLedger(cancelToken: any(named: 'cancelToken')),
@@ -84,7 +91,13 @@ void main() {
 
     final result = await repository.getLedgerSnapshot();
 
-    expect(result, Success(snapshot));
+    final ledger = result.fold(
+      onSuccess: (value) => value,
+      onFailure: (failure) => throw TestFailure('$failure'),
+    );
+    expect(ledger.openingBalance, snapshot.openingBalance);
+    expect(ledger.lastSynchronizedAt, now.subtract(const Duration(hours: 1)));
+    expect(ledger.isStale, isTrue);
     verify(() => remote.fetchLedger()).called(1);
   });
 
@@ -104,7 +117,13 @@ void main() {
 
     final result = await repository.getLedgerSnapshot();
 
-    expect(result, Success(snapshot));
+    final ledger = result.fold(
+      onSuccess: (value) => value,
+      onFailure: (failure) => throw TestFailure('$failure'),
+    );
+    expect(ledger.openingBalance, snapshot.openingBalance);
+    expect(ledger.lastSynchronizedAt, now);
+    expect(ledger.isStale, isFalse);
     verify(() => remote.fetchLedger()).called(1);
     verify(() => local.replaceLedger(any(), now)).called(1);
   });
@@ -180,6 +199,36 @@ void main() {
       result.fold(onSuccess: (_) => null, onFailure: (failure) => failure),
       const ValidationFailure(field: 'cursor'),
     );
+  });
+
+  test('propaga cache desatualizado para a página de transações', () async {
+    final cachedAt = now.subtract(const Duration(hours: 1));
+    when(local.getLedger).thenAnswer(
+      (_) async => CachedLedger(snapshot: ledgerFixture(), cachedAt: cachedAt),
+    );
+    when(() => remote.fetchLedger()).thenThrow(
+      DioException(
+        requestOptions: RequestOptions(),
+        type: DioExceptionType.connectionError,
+      ),
+    );
+    when(
+      () => local.getTransactions(any()),
+    ).thenAnswer((_) async => TransactionPage(items: const []));
+
+    final result = await repository.getTransactions(
+      TransactionQuery(
+        filter: TransactionFilter(),
+        page: TransactionPageRequest(),
+      ),
+    );
+
+    final page = result.fold(
+      onSuccess: (value) => value,
+      onFailure: (failure) => throw TestFailure('$failure'),
+    );
+    expect(page.isStale, isTrue);
+    expect(page.lastSynchronizedAt, cachedAt);
   });
 
   test('retorna NotFoundFailure para detalhe inexistente', () async {

@@ -4,6 +4,7 @@ import 'package:fluxo_financeiro/features/financial_account/domain/filters/trans
 import 'package:fluxo_financeiro/features/financial_account/domain/value_objects/utc_date_range.dart';
 import 'package:fluxo_financeiro/features/financial_account/presentation/statement/statement_cubit.dart';
 import 'package:fluxo_financeiro/features/financial_account/presentation/widgets/failure_message.dart';
+import 'package:fluxo_financeiro/features/financial_account/presentation/widgets/data_freshness_banner.dart';
 import 'package:fluxo_financeiro/features/financial_account/presentation/widgets/message_state.dart';
 import 'package:fluxo_financeiro/features/financial_account/presentation/widgets/transaction_labels.dart';
 import 'package:fluxo_financeiro/features/financial_account/presentation/widgets/transaction_tile.dart';
@@ -52,34 +53,55 @@ final class _StatementScreenState extends State<StatementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Extrato')),
-      body: BlocConsumer<StatementCubit, StatementState>(
-        listenWhen: (previous, current) =>
-            previous.failure != current.failure &&
-            current.failure != null &&
-            current.items.isNotEmpty,
-        listener: (context, state) => ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(failureMessage(state.failure!)))),
-        builder: (context, state) {
-          return Column(
-            children: [
-              _SearchAndFilters(
-                controller: _searchController,
-                filter: state.filter ?? TransactionFilter(),
-                onShowFilters: () => _showFilters(context, state.filter),
+      body: SafeArea(
+        bottom: false,
+        child: BlocConsumer<StatementCubit, StatementState>(
+          listenWhen: (previous, current) =>
+              previous.failure != current.failure &&
+              current.failure != null &&
+              current.items.isNotEmpty,
+          listener: (context, state) =>
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(failureMessage(state.failure!))),
               ),
-              Expanded(child: _buildContent(context, state)),
-            ],
-          );
-        },
+          builder: (context, state) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+                  child: Text(
+                    'Extrato',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                _SearchAndFilters(
+                  controller: _searchController,
+                  filter: state.filter ?? TransactionFilter(),
+                  onShowFilters: () => _showFilters(context, state.filter),
+                ),
+                if (state.isStale)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 2, 20, 8),
+                    child: DataFreshnessBanner(
+                      lastSynchronizedAt: state.lastSynchronizedAt,
+                      onRefresh: context.read<StatementCubit>().refresh,
+                    ),
+                  ),
+                Expanded(child: _buildContent(context, state)),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget _buildContent(BuildContext context, StatementState state) {
     if (state.status == StatementStatus.loading && state.items.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const _StatementSkeleton();
     }
     if (state.status == StatementStatus.failure && state.items.isEmpty) {
       return MessageState(
@@ -109,7 +131,7 @@ final class _StatementScreenState extends State<StatementScreen> {
       child: ListView.builder(
         key: const PageStorageKey('statement-list'),
         controller: _scrollController,
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
         itemCount:
             rows.length +
             (state.isLoadingMore || (state.failure != null && state.hasNextPage)
@@ -150,10 +172,14 @@ final class _StatementScreenState extends State<StatementScreen> {
       if (day != previousDay) {
         rows.add(
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 20, 8, 4),
+            padding: const EdgeInsets.fromLTRB(4, 22, 4, 8),
             child: Text(
-              FinancialFormatters.dayHeader(day),
-              style: const TextStyle(fontWeight: FontWeight.w700),
+              FinancialFormatters.dayHeader(day).toUpperCase(),
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.6,
+              ),
             ),
           ),
         );
@@ -175,6 +201,7 @@ final class _StatementScreenState extends State<StatementScreen> {
 
     await showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       showDragHandle: true,
       builder: (sheetContext) => StatefulBuilder(
@@ -191,8 +218,10 @@ final class _StatementScreenState extends State<StatementScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Filtrar extrato',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  'Filtros',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 20),
                 const Text(
@@ -238,55 +267,57 @@ final class _StatementScreenState extends State<StatementScreen> {
                       .toList(),
                 ),
                 const SizedBox(height: 20),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.date_range_outlined),
-                  title: const Text('Período'),
-                  subtitle: Text(
-                    period == null
-                        ? 'Todas as datas'
-                        : '${FinancialFormatters.date(period!.startInclusive)} a '
-                              '${FinancialFormatters.date(period!.endExclusive.subtract(const Duration(days: 1)))}',
+                Card(
+                  color: Theme.of(context).colorScheme.surfaceContainer,
+                  child: ListTile(
+                    leading: const Icon(Icons.date_range_outlined),
+                    title: const Text('Período'),
+                    subtitle: Text(
+                      period == null
+                          ? 'Todas as datas'
+                          : '${FinancialFormatters.date(period!.startInclusive)} a '
+                                '${FinancialFormatters.date(period!.endExclusive.subtract(const Duration(days: 1)))}',
+                    ),
+                    trailing: period == null
+                        ? const Icon(Icons.chevron_right)
+                        : IconButton(
+                            tooltip: 'Limpar período',
+                            onPressed: () => setSheetState(() => period = null),
+                            icon: const Icon(Icons.clear),
+                          ),
+                    onTap: () async {
+                      final now = DateTime.now();
+                      final selected = await showDateRangePicker(
+                        context: context,
+                        firstDate: DateTime(now.year - 5),
+                        lastDate: DateTime(now.year + 1),
+                        initialDateRange: period == null
+                            ? null
+                            : DateTimeRange(
+                                start: period!.startInclusive.toLocal(),
+                                end: period!.endExclusive
+                                    .subtract(const Duration(days: 1))
+                                    .toLocal(),
+                              ),
+                      );
+                      if (selected != null) {
+                        setSheetState(() {
+                          period = UtcDateRange(
+                            startInclusive: DateTime(
+                              selected.start.year,
+                              selected.start.month,
+                              selected.start.day,
+                            ).toUtc(),
+                            endExclusive: DateTime(
+                              selected.end.year,
+                              selected.end.month,
+                              selected.end.day + 1,
+                            ).toUtc(),
+                          );
+                        });
+                      }
+                    },
                   ),
-                  trailing: period == null
-                      ? const Icon(Icons.chevron_right)
-                      : IconButton(
-                          tooltip: 'Limpar período',
-                          onPressed: () => setSheetState(() => period = null),
-                          icon: const Icon(Icons.clear),
-                        ),
-                  onTap: () async {
-                    final now = DateTime.now();
-                    final selected = await showDateRangePicker(
-                      context: context,
-                      firstDate: DateTime(now.year - 5),
-                      lastDate: DateTime(now.year + 1),
-                      initialDateRange: period == null
-                          ? null
-                          : DateTimeRange(
-                              start: period!.startInclusive.toLocal(),
-                              end: period!.endExclusive
-                                  .subtract(const Duration(days: 1))
-                                  .toLocal(),
-                            ),
-                    );
-                    if (selected != null) {
-                      setSheetState(() {
-                        period = UtcDateRange(
-                          startInclusive: DateTime(
-                            selected.start.year,
-                            selected.start.month,
-                            selected.start.day,
-                          ).toUtc(),
-                          endExclusive: DateTime(
-                            selected.end.year,
-                            selected.end.month,
-                            selected.end.day + 1,
-                          ).toUtc(),
-                        );
-                      });
-                    }
-                  },
                 ),
                 const SizedBox(height: 20),
                 Row(
@@ -344,32 +375,145 @@ final class _SearchAndFilters extends StatelessWidget {
         filter.statuses.length +
         (filter.period == null ? 0 : 1);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              onChanged: context.read<StatementCubit>().search,
-              textInputAction: TextInputAction.search,
-              decoration: const InputDecoration(
-                hintText: 'Buscar por descrição',
-                prefixIcon: Icon(Icons.search),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  onChanged: context.read<StatementCubit>().search,
+                  textInputAction: TextInputAction.search,
+                  decoration: const InputDecoration(
+                    hintText: 'Buscar por descrição',
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Badge(
+                isLabelVisible: activeFilters > 0,
+                label: Text('$activeFilters'),
+                child: IconButton.filled(
+                  tooltip: 'Filtrar extrato',
+                  onPressed: onShowFilters,
+                  icon: const Icon(Icons.tune),
+                ),
+              ),
+            ],
+          ),
+          if (activeFilters > 0) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ...filter.types.map(
+                  (type) => InputChip(
+                    label: Text(type.label),
+                    onDeleted: () {
+                      final updated = Set<TransactionType>.of(filter.types)
+                        ..remove(type);
+                      context.read<StatementCubit>().setTypes(updated);
+                    },
+                  ),
+                ),
+                ...filter.statuses.map(
+                  (status) => InputChip(
+                    label: Text(status.label),
+                    onDeleted: () {
+                      final updated = Set<TransactionStatus>.of(filter.statuses)
+                        ..remove(status);
+                      context.read<StatementCubit>().setStatuses(updated);
+                    },
+                  ),
+                ),
+                if (filter.period != null)
+                  InputChip(
+                    label: Text(
+                      '${FinancialFormatters.date(filter.period!.startInclusive)} – '
+                      '${FinancialFormatters.date(filter.period!.endExclusive.subtract(const Duration(days: 1)))}',
+                    ),
+                    onDeleted: () =>
+                        context.read<StatementCubit>().setPeriod(null),
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+final class _StatementSkeleton extends StatelessWidget {
+  const _StatementSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.surfaceContainer;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
+      children: [
+        Container(
+          height: 14,
+          width: 96,
+          alignment: Alignment.centerLeft,
+          child: FractionallySizedBox(
+            widthFactor: 0.3,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          Badge(
-            isLabelVisible: activeFilters > 0,
-            label: Text('$activeFilters'),
-            child: IconButton.filledTonal(
-              tooltip: 'Filtrar extrato',
-              onPressed: onShowFilters,
-              icon: const Icon(Icons.tune),
-            ),
+        ),
+        const SizedBox(height: 14),
+        for (var index = 0; index < 6; index++) ...[
+          Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 13,
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    FractionallySizedBox(
+                      widthFactor: 0.55,
+                      child: Container(
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 20),
         ],
-      ),
+      ],
     );
   }
 }

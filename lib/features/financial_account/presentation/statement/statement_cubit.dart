@@ -19,6 +19,8 @@ final class StatementState extends Equatable {
     this.nextCursor,
     this.isLoadingMore = false,
     this.isRefreshing = false,
+    this.isStale = false,
+    this.lastSynchronizedAt,
     this.failure,
   });
 
@@ -28,6 +30,8 @@ final class StatementState extends Equatable {
   final String? nextCursor;
   final bool isLoadingMore;
   final bool isRefreshing;
+  final bool isStale;
+  final DateTime? lastSynchronizedAt;
   final Failure? failure;
   bool get hasNextPage => nextCursor != null;
 
@@ -39,6 +43,8 @@ final class StatementState extends Equatable {
     nextCursor,
     isLoadingMore,
     isRefreshing,
+    isStale,
+    lastSynchronizedAt,
     failure,
   ];
 }
@@ -81,6 +87,8 @@ final class StatementCubit extends Cubit<StatementState> {
           filter: state.filter,
           items: reset ? page.items : [...state.items, ...page.items],
           nextCursor: page.nextCursor,
+          isStale: page.isStale,
+          lastSynchronizedAt: page.lastSynchronizedAt,
         ),
       ),
       onFailure: (failure) => emit(
@@ -89,6 +97,8 @@ final class StatementCubit extends Cubit<StatementState> {
           filter: state.filter,
           items: state.items,
           nextCursor: state.nextCursor,
+          isStale: state.isStale,
+          lastSynchronizedAt: state.lastSynchronizedAt,
           failure: failure,
         ),
       ),
@@ -181,6 +191,8 @@ final class StatementCubit extends Cubit<StatementState> {
     nextCursor: state.nextCursor,
     isLoadingMore: isLoadingMore ?? state.isLoadingMore,
     isRefreshing: isRefreshing ?? state.isRefreshing,
+    isStale: state.isStale,
+    lastSynchronizedAt: state.lastSynchronizedAt,
     failure: clearFailure ? null : failure ?? state.failure,
   );
 

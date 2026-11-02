@@ -7,6 +7,7 @@ import 'package:fluxo_financeiro/core/result/result.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/entities/financial_transaction.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/entities/ledger_snapshot.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/entities/transaction_page.dart';
+import 'package:fluxo_financeiro/features/financial_account/domain/entities/transaction_details.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/filters/transaction_filter.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/repositories/financial_repository.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/use_cases/get_account_summary.dart';
@@ -69,9 +70,9 @@ void main() {
             : <FinancialTransaction>[];
         return Success(TransactionPage(items: items));
       });
-      when(
-        () => repository.getTransactionById(_transaction.id),
-      ).thenAnswer((_) async => Success(_transaction));
+      when(() => repository.getTransactionById(_transaction.id)).thenAnswer(
+        (_) async => Success(TransactionDetails(transaction: _transaction)),
+      );
       when(repository.refresh).thenAnswer((_) async => const Success(null));
 
       final preferences = _Preferences();

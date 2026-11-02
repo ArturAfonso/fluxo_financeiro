@@ -1,11 +1,11 @@
 # Cobertura de testes
 
-Medição realizada em 2026-11-01 com Flutter 3.41.7 e Dart 3.11.5.
+Medição realizada em 2026-11-02 com Flutter 3.41.7 e Dart 3.11.5.
 
 | Grupo | Linhas cobertas | Linhas válidas | Cobertura | Mínimo |
 |---|---:|---:|---:|---:|
-| Domínio financeiro | 145 | 169 | 85,80% | 70% |
-| ViewModels (`Cubit`) | 137 | 175 | 78,29% | 70% |
+| Domínio financeiro | 179 | 234 | 76,50% | 70% |
+| ViewModels (`Cubit`) | 159 | 191 | 83,25% | 70% |
 
 ## Reprodução
 

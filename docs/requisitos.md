@@ -11,7 +11,7 @@ para sua implementação, seus testes e sua documentação.
 | RF-DASH-01 | Exibir saldo disponível | Concluído |
 | RF-DASH-02 | Ocultar e exibir saldo, mantendo a preferência entre sessões | Concluído |
 | RF-DASH-03 | Exibir entradas e saídas do período selecionado | Concluído |
-| RF-DASH-04 | Exibir gráfico simples de evolução | Concluído |
+| RF-DASH-04 | Exibir gráfico simples de evolução | Concluído com pontos diários e agrupamento visual semanal em meses completos |
 | RF-DASH-05 | Exibir transações recentes e acesso ao extrato completo | Concluído |
 | RF-EXT-01 | Listar descrição, data, valor e status | Concluído |
 | RF-EXT-02 | Diferenciar entradas e saídas sem depender apenas de cor | Concluído |
@@ -35,7 +35,7 @@ para sua implementação, seus testes e sua documentação.
 | RD-03 | Estados de carregamento, atualização, vazio, erro e offline | Concluído |
 | RD-04 | Pull-to-refresh | Concluído |
 | RD-05 | Cache dos últimos dados conhecidos | Concluído na camada de dados |
-| RD-06 | Sinalizar dados possivelmente desatualizados | Concluído com instante da atualização e aviso de falha |
+| RD-06 | Sinalizar dados possivelmente desatualizados | Concluído com banner, instante da sincronização e nova tentativa |
 | RD-07 | Deduplicar chamadas equivalentes | Concluído para sincronização |
 | RD-08 | Cancelar requisições obsoletas | Concluído na fonte remota |
 | RD-09 | Tratar HTTP 429 com retentativa e backoff exponencial | Concluído |
@@ -89,7 +89,7 @@ para sua implementação, seus testes e sua documentação.
 | RQ-01 | Testar domínio, ViewModels e repositórios com mocks | Concluído |
 | RQ-02 | Testar widgets principais em loading, vazio e erro | Concluído |
 | RQ-03 | Ter ao menos um teste de integração do fluxo principal | Concluído |
-| RQ-04 | Atingir 70% de cobertura em domínio e ViewModels | Concluído; 85,80% e 78,29% |
+| RQ-04 | Atingir 70% de cobertura em domínio e ViewModels | Concluído; 76,50% e 83,25% |
 | RQ-05 | Gerar e entregar relatório de cobertura | Concluído em `docs/coverage.md` |
 | RQ-06 | Usar listas lazy, `const` e rebuilds controlados | Concluído |
 | RQ-07 | Oferecer semântica, contraste e escala de fonte adequados | Concluído |
@@ -100,7 +100,7 @@ para sua implementação, seus testes e sua documentação.
 
 | ID | Entregável | Estado |
 |---|---|---|
-| RE-01 | Repositório Git público com histórico coeso | Pendente |
+| RE-01 | Repositório Git público com histórico coeso | Concluído |
 | RE-02 | APK Android de release | Concluído localmente |
 | RE-03 | README com ambiente, execução, testes e build | Concluído |
 | RE-04 | Diagrama de camadas e fluxo de dados | Concluído em `docs/ARCHITECTURE.md` |

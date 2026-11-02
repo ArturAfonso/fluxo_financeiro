@@ -10,12 +10,13 @@ deliberadamente fora do escopo.
 ## Funcionalidades
 
 - saldo disponível com preferência persistida de visibilidade;
-- totais e gráfico de entradas e saídas por mês;
+- totais mensais e gráfico de evolução diária, com agrupamento semanal em
+  meses completos;
 - transações recentes e extrato completo;
 - busca com debounce e filtros combináveis por tipo, status e período;
 - paginação por cursor e agrupamento por data;
 - detalhes e cópia do identificador da transação;
-- cache local, pull-to-refresh e fallback para o último snapshot;
+- cache local, pull-to-refresh e fallback sinalizado para o último snapshot;
 - temas claro e escuro com escolha persistida;
 - estados de loading, vazio, erro, offline e retry.
 
@@ -93,8 +94,8 @@ dart run tool/check_coverage.dart coverage/lcov.info
 
 Cobertura medida:
 
-- domínio: 85,80%;
-- ViewModels: 78,29%;
+- domínio: 76,50%;
+- ViewModels: 83,25%;
 - mínimo automatizado: 70% para cada grupo.
 
 O fluxo dashboard → extrato → busca → detalhes → retorno é coberto por teste de

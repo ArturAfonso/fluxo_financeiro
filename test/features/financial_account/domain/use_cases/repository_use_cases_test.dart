@@ -3,6 +3,7 @@ import 'package:fluxo_financeiro/core/result/result.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/entities/financial_transaction.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/entities/ledger_snapshot.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/entities/transaction_page.dart';
+import 'package:fluxo_financeiro/features/financial_account/domain/entities/transaction_details.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/filters/transaction_filter.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/repositories/financial_repository.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/use_cases/get_account_summary.dart';
@@ -98,13 +99,13 @@ void main() {
 
   group('GetTransactionDetails', () {
     test('normaliza o identificador antes de consultar', () async {
-      when(
-        () => repository.getTransactionById('tx-1'),
-      ).thenAnswer((_) async => Success(_transaction));
+      when(() => repository.getTransactionById('tx-1')).thenAnswer(
+        (_) async => Success(TransactionDetails(transaction: _transaction)),
+      );
 
       final result = await GetTransactionDetails(repository)(' tx-1 ');
 
-      expect(result, Success(_transaction));
+      expect(result, Success(TransactionDetails(transaction: _transaction)));
       verify(() => repository.getTransactionById('tx-1')).called(1);
     });
 
@@ -113,7 +114,7 @@ void main() {
 
       expect(
         result,
-        const FailureResult<FinancialTransaction>(
+        const FailureResult<TransactionDetails>(
           ValidationFailure(field: 'transactionId'),
         ),
       );
