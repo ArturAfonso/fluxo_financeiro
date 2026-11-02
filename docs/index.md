@@ -1,6 +1,6 @@
 # Documentação do Fluxo Financeiro
 
-Este é o ponto de entrada da documentação AI-ready do projeto.
+Este é o ponto de entrada da documentação do projeto.
 
 > **Estado:** scaffold mobile concluído; requisitos catalogados; arquitetura de
 > referência registrada; implementação funcional ainda não iniciada.

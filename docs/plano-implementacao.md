@@ -9,7 +9,7 @@ O trabalho será dividido em incrementos pequenos, demonstráveis e verificávei
 - criar projeto Flutter apenas para Android e iOS;
 - registrar organização e nome do aplicativo;
 - documentar baseline do Flutter e Dart;
-- criar documentação AI-ready;
+- criar a estrutura inicial da documentação do projeto;
 - validar analyze e teste inicial.
 
 ## Incremento 1 - Contratos e decisões
