@@ -1,0 +1,50 @@
+name: Qualidade
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Instalar Flutter
+        uses: subosito/flutter-action@v2.23.0
+        with:
+          flutter-version: 3.41.7
+          channel: stable
+          cache: true
+
+      - name: Instalar SQLite
+        run: sudo apt-get update && sudo apt-get install --yes libsqlite3-0
+
+      - name: Resolver dependências
+        run: flutter pub get
+
+      - name: Verificar formatação
+        run: dart format --output=none --set-exit-if-changed lib test integration_test tool
+
+      - name: Analisar código
+        run: flutter analyze
+
+      - name: Executar testes e cobertura
+        run: flutter test --coverage
+
+      - name: Validar cobertura mínima
+        run: dart run tool/check_coverage.dart coverage/lcov.info
+
+      - name: Validar build Android
+        run: flutter build apk --debug

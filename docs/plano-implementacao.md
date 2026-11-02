@@ -14,6 +14,8 @@ O trabalho será dividido em incrementos pequenos, demonstráveis e verificávei
 
 ## Incremento 1 - Contratos e decisões
 
+**Estado:** concluído.
+
 - concluir matriz de rastreabilidade;
 - registrar ADRs de estado, DI, navegação, persistência e dados remotos;
 - definir modelo de dinheiro, transação, status, filtros e paginação;
@@ -25,6 +27,8 @@ podem ser testados sem widgets.
 
 ## Incremento 2 - Domínio financeiro
 
+**Estado:** concluído.
+
 - implementar value object monetário;
 - implementar entidades e filtros;
 - implementar casos de uso de saldo, totais, extrato e detalhes;
@@ -33,6 +37,8 @@ podem ser testados sem widgets.
 **Aceite:** testes de domínio passam, sem imports do Flutter ou infraestrutura.
 
 ## Incremento 3 - Dados, cache e resiliência
+
+**Estado:** concluído.
 
 - implementar DTOs, mappers e parsing defensivo;
 - implementar datasource remoto ou mock;
@@ -44,6 +50,8 @@ podem ser testados sem widgets.
 
 ## Incremento 4 - Apresentação MVVM
 
+**Estado:** concluído.
+
 - implementar tema claro e escuro;
 - implementar navegação nomeada;
 - implementar dashboard, extrato e detalhes;
@@ -54,6 +62,9 @@ podem ser testados sem widgets.
 **Aceite:** widgets não contêm regras financeiras ou acesso direto a dados.
 
 ## Incremento 5 - Qualidade e entrega
+
+**Estado:** concluído tecnicamente; publicação do repositório permanece sob
+responsabilidade do autor.
 
 - completar testes unitários, de widget e integração;
 - medir e impor cobertura mínima de domínio e ViewModels;

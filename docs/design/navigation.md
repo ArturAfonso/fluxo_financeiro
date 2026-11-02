@@ -2,8 +2,8 @@
 
 ## Estado
 
-Mapa inicial. A biblioteca de roteamento e a shell serão confirmadas por ADR.
-Rotas nomeadas e preservação de estado são obrigatórias.
+Mapa aceito. GoRouter e rotas nomeadas foram confirmados no ADR 0004.
+Preservação de estado é obrigatória.
 
 ## Telas principais
 

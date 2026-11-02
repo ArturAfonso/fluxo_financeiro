@@ -1,4 +1,4 @@
-# Orientações para assistentes e colaboradores
+# Orientações de contribuição
 
 Este arquivo define como interpretar requisitos, documentação e código do
 Fluxo Financeiro.

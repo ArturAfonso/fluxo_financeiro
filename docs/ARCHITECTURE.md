@@ -8,7 +8,7 @@ rede.
 
 ## 2. Estilo arquitetural
 
-O projeto usará organização por feature com camadas internas obrigatórias:
+O projeto usa organização por feature com camadas internas obrigatórias:
 
 ```text
 View
@@ -23,22 +23,22 @@ View
 Dependências apontam para dentro. O domínio não conhece Flutter, banco, HTTP ou
 classes de apresentação.
 
-## 3. Estrutura planejada de `lib`
+## 3. Estrutura de `lib`
 
 ```text
 lib/
 ├── app/
 │   ├── app.dart
-│   ├── bootstrap.dart
+│   ├── config/
 │   ├── di/
 │   ├── router/
 │   └── theme/
 ├── core/
 │   ├── errors/
-│   ├── result/
+│   ├── formatters/
 │   ├── network/
-│   ├── persistence/
-│   └── utils/
+│   ├── preferences/
+│   └── result/
 └── features/
     └── financial_account/
         ├── domain/
@@ -57,7 +57,7 @@ lib/
             └── transaction_details/
 ```
 
-Pastas só serão criadas quando contiverem uma responsabilidade real.
+Pastas só são criadas quando contêm uma responsabilidade real.
 
 ## 4. Responsabilidades
 
@@ -93,36 +93,67 @@ Pastas só serão criadas quando contiverem uma responsabilidade real.
 
 ## 5. Fonte única de verdade
 
-A estratégia pretendida é observar a fonte local e fazer a sincronização
-remota atualizar essa fonte atomicamente. Dashboard, extrato e detalhes devem
-ler o mesmo conjunto canônico de entidades. A decisão final de persistência e a
-política de expiração serão registradas por ADR.
+A fonte local é o estado canônico, e a sincronização remota
+substitui o snapshot do Drift atomicamente. Dashboard, extrato e detalhes leem
+o mesmo conjunto de entidades. Cache, expiração, cursor e retry estão definidos
+no ADR 0009.
 
 ## 6. Dinheiro e datas
 
-- Valores monetários serão representados por value object baseado em unidade
-  mínima inteira ou decimal seguro.
+- Valores monetários são representados por `Money`, em centavos inteiros.
 - Conversão e arredondamento pertencem ao domínio ou ao mapper, nunca ao widget.
-- Datas externas e persistidas serão UTC.
-- Conversão para fuso local e formatação pt-BR ocorrerão na fronteira de
+- Datas externas e persistidas são UTC.
+- Conversão para fuso local e formatação pt-BR ocorrem na fronteira de
   apresentação.
 
 ## 7. Navegação
 
-Dashboard, extrato e detalhe usarão rotas nomeadas. A rota de detalhe receberá
+Dashboard, extrato e detalhe usam rotas nomeadas. A rota de detalhe recebe
 um identificador, não uma entidade completa. Isso evita estado duplicado e faz
 o detalhe consultar a mesma fonte de verdade.
 
-## 8. Decisões pendentes
+## 8. Stack aprovada
 
-- biblioteca de ViewModel/estado;
-- ferramenta de DI;
-- banco local;
-- cliente HTTP;
-- formato do mock remoto;
-- estratégia de paginação;
-- política de expiração e sincronização;
-- modelagem final de `Result` e falhas.
+- `flutter_bloc`: ViewModels baseados em Cubit.
+- `equatable`: igualdade por valor dos estados imutáveis.
+- `get_it`: composition root e resolução central de dependências.
+- `go_router`: rotas declarativas e nomeadas.
+- `dio`: HTTP, interceptadores, timeout e cancelamento.
+- `drift` e `drift_flutter`: cache estruturado e consultas reativas.
+- `shared_preferences`: preferências simples pela API
+  `SharedPreferencesAsync`.
+- `intl`: formatação pt-BR.
+- `fl_chart`: visualização da evolução financeira.
 
-Essas escolhas devem maximizar clareza, testabilidade e capacidade de defesa,
-sem adicionar camadas ou padrões sem responsabilidade concreta.
+As justificativas e consequências estão nos [ADRs](adr/README.md).
+
+## 9. Fluxo de dados
+
+```mermaid
+flowchart LR
+  V[View] --> C[Cubit / ViewModel]
+  C --> U[Use case]
+  U --> R[Contrato do repositório]
+  R --> I[Implementação]
+  I --> L[(Drift)]
+  I --> D[Dio / mock]
+  D --> I
+  L --> I
+  I --> R
+  R --> U
+  U --> C
+  C --> V
+```
+
+A atualização remota é validada e gravada em uma transação atômica. Leituras
+posteriores de dashboard, extrato e detalhes saem do Drift, evitando versões
+divergentes da mesma transação.
+
+## 10. Limites conscientes
+
+- O backend simulado é selecionado por configuração e usa somente dados
+  fictícios.
+- O snapshot completo simplifica sincronização e consistência para o volume do
+  desafio; uma API de produção poderia exigir sincronização incremental.
+- Preferências armazenam somente tema e visibilidade do saldo. Nenhum dado
+  sensível é colocado em `SharedPreferences`.

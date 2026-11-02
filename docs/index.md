@@ -2,8 +2,8 @@
 
 Este é o ponto de entrada da documentação do projeto.
 
-> **Estado:** scaffold mobile concluído; requisitos catalogados; arquitetura de
-> referência registrada; implementação funcional ainda não iniciada.
+> **Estado:** implementação funcional concluída; qualidade e artefatos finais
+> validados.
 >
 > **Baseline:** Flutter 3.41.7 stable e Dart 3.11.5.
 >
@@ -21,6 +21,7 @@ técnica.
 - O documento `Teste Flutter (Banco).docx` é a especificação superior.
 - [requisitos.md](requisitos.md) é o catálogo rastreável de requisitos.
 - [ARCHITECTURE.md](ARCHITECTURE.md) define limites e dependências das camadas.
+- [data-contract.md](data-contract.md) define o backend simulado e seu mapeamento.
 - ADRs aceitos em [adr/](adr/) registram decisões e consequências.
 - [design/](design/) concentra navegação, tokens e referências visuais.
 
@@ -43,29 +44,30 @@ técnica.
 - Projeto Dart: `fluxo_financeiro`.
 - Organização: `br.com.arturafonso`.
 - Plataformas geradas: Android e iOS.
-
-### Em avaliação
-
-- implementação de ViewModel e gerenciamento de estado;
-- contêiner de injeção de dependências;
-- cliente HTTP e mecanismo de cancelamento/deduplicação;
-- banco local e estratégia exata de sincronização;
-- backend simulado e eventual uso complementar da CoinGecko;
-- identidade visual e tipografia finais.
+- ViewModels implementados com Cubit (`flutter_bloc`) e estados imutáveis.
+- GetIt como composition root, preservando injeção por construtor.
+- GoRouter com rotas nomeadas.
+- Dio para HTTP, cancelamento e interceptadores.
+- Drift como persistência estruturada e `SharedPreferencesAsync` para
+  preferências simples.
+- `intl`, `equatable` e `fl_chart` como bibliotecas de apoio.
 
 ## Mapa da documentação
 
 | Documento | Finalidade | Estado |
 |---|---|---|
-| [AGENTS.md](../AGENTS.md) | Regras para assistentes e colaboradores | Aceito |
 | [README.md](../README.md) | Entrada pública e comandos do projeto | Aceito; evolutivo |
-| [requisitos.md](requisitos.md) | Requisitos e rastreabilidade | Obrigatório; inicial |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Arquitetura MVVM e limites das camadas | Obrigatório; inicial |
-| [plano-implementacao.md](plano-implementacao.md) | Incrementos e critérios de aceite | Provisório |
+| [requisitos.md](requisitos.md) | Requisitos e rastreabilidade | Obrigatório; atualizado |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Arquitetura MVVM e limites das camadas | Obrigatório; atualizado |
+| [data-contract.md](data-contract.md) | Backend simulado e mapeamento do domínio | Aceito |
+| [coverage.md](coverage.md) | Evidência e regra de cobertura | Aceito |
+| [apresentacao-tecnica.md](apresentacao-tecnica.md) | Roteiro de demonstração e defesa | Aceito |
+| [plano-implementacao.md](plano-implementacao.md) | Incrementos e critérios de aceite | Concluído |
 | [adr/README.md](adr/README.md) | Índice das decisões arquiteturais | Aceito |
 | [design/README.md](design/README.md) | Entrada da documentação visual | Aceito |
-| [design/navigation.md](design/navigation.md) | Rotas, telas e preservação de estado | Inicial |
-| [design/tokens.md](design/tokens.md) | Tokens semânticos e acessibilidade | Provisório |
+| [design/navigation.md](design/navigation.md) | Rotas, telas e preservação de estado | Aceito |
+| [design/screen-states.md](design/screen-states.md) | Estados e ações por tela | Aceito |
+| [design/tokens.md](design/tokens.md) | Tokens semânticos e acessibilidade | Aceito |
 | [design/screens/README.md](design/screens/README.md) | Convenções para referências de telas | Aceito |
 
 ## Regra de atualização

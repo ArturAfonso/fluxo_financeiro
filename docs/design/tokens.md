@@ -2,8 +2,8 @@
 
 ## Estado
 
-**Provisório.** A estrutura semântica está aceita; valores finais dependem dos
-primeiros mockups e da validação de contraste.
+**Aceito.** A implementação usa os tokens semânticos do Material 3 e mantém os
+dois temas derivados da mesma cor-base.
 
 ## Princípios obrigatórios
 
@@ -14,25 +14,27 @@ primeiros mockups e da validação de contraste.
 - usar tokens, sem cores e dimensões espalhadas pelos widgets;
 - manter contraste verificável nos dois temas.
 
-## Grupos de tokens planejados
+## Implementação
 
-- `background`, `surface` e `surfaceContainer`;
-- `foreground` e `mutedForeground`;
-- `primary`, `secondary` e respectivos contrastes;
-- `positive`, `negative`, `warning`, `info` e `disabled`;
-- `border`, `divider`, `focus` e `shadow`;
-- escala tipográfica;
-- espaçamento, raios, elevação e movimento.
+- `ColorScheme.fromSeed` com base `#175CD3` para claro e escuro;
+- superfícies e cores de conteúdo obtidas do `ColorScheme` ativo;
+- cards sem elevação e com raio de 20 px;
+- campos preenchidos, sem borda visível e com raio de 16 px;
+- tipografia responsiva fornecida pelo `TextTheme` do Material 3;
+- estados negativos usam `error` e `errorContainer`, acompanhados de sinal,
+  ícone e texto;
+- estados positivos usam `primary` e `primaryContainer`, acompanhados de sinal,
+  ícone e texto.
 
 ## Regras financeiras
 
-Entradas e saídas usarão combinação de sinal, rótulo, ícone e cor. Status
-terão texto visível, evitando depender de interpretação cromática.
+Entradas e saídas usam combinação de sinal, rótulo, ícone e cor. Status têm
+texto visível, evitando depender de interpretação cromática.
 
-## Validações pendentes
+## Validações
 
-- paleta e tipografia finais;
-- contraste WCAG dos pares principais;
-- comportamento com escala de texto ampliada;
-- gráfico legível nos dois temas;
-- estados de foco, erro, offline e dados desatualizados.
+- cores de conteúdo usam os pares `on*` produzidos pelo Material 3;
+- escala de texto de 200% possui teste de widget sem overflow;
+- controles possuem tooltip ou rótulo e áreas de toque do Material;
+- saldo e transações têm descrições semânticas próprias;
+- loading, vazio, erro, offline e retry possuem mensagens textuais.
