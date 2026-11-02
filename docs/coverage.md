@@ -5,7 +5,7 @@ Medição realizada em 2026-11-02 com Flutter 3.41.7 e Dart 3.11.5.
 | Grupo | Linhas cobertas | Linhas válidas | Cobertura | Mínimo |
 |---|---:|---:|---:|---:|
 | Domínio financeiro | 179 | 234 | 76,50% | 70% |
-| ViewModels (`Cubit`) | 151 | 191 | 79,06% | 70% |
+| ViewModels (`Cubit`) | 159 | 191 | 83,25% | 70% |
 
 ## Reprodução
 

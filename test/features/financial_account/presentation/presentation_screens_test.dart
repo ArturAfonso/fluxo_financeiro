@@ -223,6 +223,37 @@ void main() {
     expect(find.textContaining('podem estar desatualizados'), findsOneWidget);
     expect(find.byTooltip('Tentar atualizar'), findsOneWidget);
   });
+
+  testWidgets('dashboard agrupa mês completo em períodos semanais', (
+    tester,
+  ) async {
+    when(
+      repository.getLedgerSnapshot,
+    ).thenAnswer((_) async => Success(_snapshot));
+    when(
+      () => repository.getTransactions(any()),
+    ).thenAnswer((_) async => Success(TransactionPage(items: [_transaction])));
+    final cubit = _dashboardCubit(repository);
+    final themeCubit = ThemeCubit(_Preferences());
+    await cubit.load();
+    await cubit.changeMonth(-1);
+    addTearDown(cubit.close);
+    addTearDown(themeCubit.close);
+
+    await tester.pumpWidget(
+      _TestApp(
+        providers: [
+          BlocProvider<ThemeCubit>.value(value: themeCubit),
+          BlocProvider<DashboardCubit>.value(value: cubit),
+        ],
+        child: const DashboardScreen(),
+      ),
+    );
+
+    expect(find.text('Por semana'), findsOneWidget);
+    expect(find.text('01–07'), findsOneWidget);
+    expect(find.text('29–31'), findsOneWidget);
+  });
 }
 
 DashboardCubit _dashboardCubit(FinancialRepository repository) =>

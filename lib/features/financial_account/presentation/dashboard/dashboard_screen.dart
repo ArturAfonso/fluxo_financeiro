@@ -3,6 +3,7 @@ import 'package:fluxo_financeiro/app/theme/app_theme.dart';
 import 'package:fluxo_financeiro/app/theme/theme_cubit.dart';
 import 'package:fluxo_financeiro/core/formatters/financial_formatters.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/entities/account_summary.dart';
+import 'package:fluxo_financeiro/features/financial_account/domain/value_objects/money.dart';
 import 'package:fluxo_financeiro/features/financial_account/presentation/dashboard/dashboard_cubit.dart';
 import 'package:fluxo_financeiro/features/financial_account/presentation/widgets/failure_message.dart';
 import 'package:fluxo_financeiro/features/financial_account/presentation/widgets/data_freshness_banner.dart';
@@ -371,6 +372,9 @@ final class _MovementChart extends StatelessWidget {
         ? AppTheme.lime
         : AppTheme.emerald;
     const debitColor = Color(0xFFE58A2B);
+    final points = _chartPoints(summary.dailyCashFlow);
+    final isWeekly = summary.dailyCashFlow.length > 7;
+    final maximum = _chartMaximum(points);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -382,31 +386,38 @@ final class _MovementChart extends StatelessWidget {
                 _ChartLegend(color: creditColor, label: 'Entradas'),
                 const SizedBox(width: 16),
                 const _ChartLegend(color: debitColor, label: 'Saídas'),
+                const Spacer(),
+                Text(
+                  isWeekly ? 'Por semana' : 'Por dia',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Semantics(
               label:
-                  'Gráfico de evolução diária: entradas ${FinancialFormatters.currency(summary.totalCredits)}; '
+                  'Gráfico de evolução ${isWeekly ? 'semanal' : 'diária'}: entradas ${FinancialFormatters.currency(summary.totalCredits)}; '
                   'saídas ${FinancialFormatters.currency(summary.totalDebits)}',
               child: SizedBox(
-                height: 180,
+                height: 168,
                 child: BarChart(
                   BarChartData(
-                    alignment: BarChartAlignment.spaceAround,
-                    maxY: _chartMaximum(summary),
+                    alignment: BarChartAlignment.spaceEvenly,
+                    maxY: maximum,
                     barTouchData: BarTouchData(
                       touchTooltipData: BarTouchTooltipData(
                         getTooltipColor: (_) => scheme.inverseSurface,
                         getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                          final point = summary.dailyCashFlow[group.x];
+                          final point = points[group.x];
                           final isCredit = rodIndex == 0;
                           final label = isCredit ? 'Entradas' : 'Saídas';
-                          final amount = isCredit
-                              ? point.credits
-                              : point.debits;
+                          final amount = Money.fromCents(
+                            isCredit ? point.creditCents : point.debitCents,
+                          );
                           return BarTooltipItem(
-                            '${FinancialFormatters.date(point.dayStart)}\n'
+                            '${_tooltipPeriod(point)}\n'
                             '$label: ${FinancialFormatters.currency(amount)}',
                             TextStyle(
                               color: scheme.onInverseSurface,
@@ -416,7 +427,15 @@ final class _MovementChart extends StatelessWidget {
                         },
                       ),
                     ),
-                    gridData: const FlGridData(show: false),
+                    gridData: FlGridData(
+                      drawVerticalLine: false,
+                      horizontalInterval: maximum / 4,
+                      getDrawingHorizontalLine: (_) => FlLine(
+                        color: scheme.outlineVariant.withValues(alpha: 0.45),
+                        strokeWidth: 1,
+                        dashArray: const [4, 5],
+                      ),
+                    ),
                     borderData: FlBorderData(show: false),
                     titlesData: FlTitlesData(
                       leftTitles: const AxisTitles(
@@ -432,25 +451,22 @@ final class _MovementChart extends StatelessWidget {
                         sideTitles: SideTitles(
                           showTitles: true,
                           reservedSize: 38,
-                          getTitlesWidget: (value, meta) => _dayTitle(
-                            context,
-                            value.toInt(),
-                            summary.dailyCashFlow,
-                          ),
+                          getTitlesWidget: (value, meta) =>
+                              _dayTitle(context, value.toInt(), points),
                         ),
                       ),
                     ),
-                    barGroups: List.generate(summary.dailyCashFlow.length, (
-                      index,
-                    ) {
-                      final point = summary.dailyCashFlow[index];
+                    barGroups: List.generate(points.length, (index) {
+                      final point = points[index];
                       return _group(
                         index,
-                        point.credits.cents / 100,
-                        point.debits.cents / 100,
+                        point.creditCents / 100,
+                        point.debitCents / 100,
                         creditColor,
                         debitColor,
-                        summary.dailyCashFlow.length,
+                        scheme.surfaceContainerHighest,
+                        maximum,
+                        points.length,
                       );
                     }),
                   ),
@@ -463,32 +479,81 @@ final class _MovementChart extends StatelessWidget {
     );
   }
 
-  double _chartMaximum(AccountSummary summary) {
+  List<_ChartPeriod> _chartPoints(List<DailyCashFlow> dailyPoints) {
+    if (dailyPoints.length <= 7) {
+      return dailyPoints
+          .map(
+            (point) => _ChartPeriod(
+              start: point.dayStart,
+              end: point.dayStart,
+              creditCents: point.credits.cents,
+              debitCents: point.debits.cents,
+            ),
+          )
+          .toList(growable: false);
+    }
+
+    final periods = <_ChartPeriod>[];
+    for (var start = 0; start < dailyPoints.length; start += 7) {
+      final end = (start + 7).clamp(0, dailyPoints.length);
+      final week = dailyPoints.sublist(start, end);
+      periods.add(
+        _ChartPeriod(
+          start: week.first.dayStart,
+          end: week.last.dayStart,
+          creditCents: week.fold(0, (total, day) => total + day.credits.cents),
+          debitCents: week.fold(0, (total, day) => total + day.debits.cents),
+        ),
+      );
+    }
+    return periods;
+  }
+
+  double _chartMaximum(List<_ChartPeriod> points) {
     var maximum = 0;
-    for (final point in summary.dailyCashFlow) {
-      if (point.credits.cents > maximum) maximum = point.credits.cents;
-      if (point.debits.cents > maximum) maximum = point.debits.cents;
+    for (final point in points) {
+      if (point.creditCents > maximum) maximum = point.creditCents;
+      if (point.debitCents > maximum) maximum = point.debitCents;
     }
     return maximum == 0 ? 1 : maximum / 100 * 1.2;
   }
 
-  Widget _dayTitle(
-    BuildContext context,
-    int index,
-    List<DailyCashFlow> points,
-  ) {
+  Widget _dayTitle(BuildContext context, int index, List<_ChartPeriod> points) {
     if (index < 0 || index >= points.length) return const SizedBox.shrink();
-    final interval = points.length <= 7 ? 1 : (points.length / 6).ceil();
-    final shouldShow =
-        index == 0 || index == points.length - 1 || index % interval == 0;
-    if (!shouldShow) return const SizedBox.shrink();
+    final point = points[index];
+    final start = point.start.toLocal();
+    final end = point.end.toLocal();
+    const months = [
+      'jan',
+      'fev',
+      'mar',
+      'abr',
+      'mai',
+      'jun',
+      'jul',
+      'ago',
+      'set',
+      'out',
+      'nov',
+      'dez',
+    ];
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.only(top: 10),
       child: Text(
-        '${points[index].dayStart.toLocal().day}',
-        style: Theme.of(context).textTheme.labelSmall,
+        start.day == end.day
+            ? '${start.day.toString().padLeft(2, '0')} ${months[start.month - 1]}'
+            : '${start.day.toString().padLeft(2, '0')}–${end.day.toString().padLeft(2, '0')}',
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
       ),
     );
+  }
+
+  String _tooltipPeriod(_ChartPeriod point) {
+    final start = FinancialFormatters.date(point.start);
+    if (point.start == point.end) return start;
+    return '$start – ${FinancialFormatters.date(point.end)}';
   }
 
   BarChartGroupData _group(
@@ -497,32 +562,62 @@ final class _MovementChart extends StatelessWidget {
     double debits,
     Color creditColor,
     Color debitColor,
+    Color backgroundColor,
+    double maximum,
     int pointCount,
   ) {
     final width = pointCount <= 7
-        ? 10.0
+        ? 16.0
         : pointCount <= 16
         ? 6.0
         : 3.5;
     return BarChartGroupData(
       x: x,
-      barsSpace: pointCount <= 16 ? 3 : 1.5,
+      barsSpace: pointCount <= 7
+          ? 7
+          : pointCount <= 16
+          ? 3
+          : 1.5,
       barRods: [
         BarChartRodData(
           toY: credits,
           width: width,
           color: creditColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
+          borderRadius: BorderRadius.circular(6),
+          backDrawRodData: BackgroundBarChartRodData(
+            show: true,
+            toY: maximum,
+            color: backgroundColor.withValues(alpha: 0.55),
+          ),
         ),
         BarChartRodData(
           toY: debits,
           width: width,
           color: debitColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
+          borderRadius: BorderRadius.circular(6),
+          backDrawRodData: BackgroundBarChartRodData(
+            show: true,
+            toY: maximum,
+            color: backgroundColor.withValues(alpha: 0.55),
+          ),
         ),
       ],
     );
   }
+}
+
+final class _ChartPeriod {
+  const _ChartPeriod({
+    required this.start,
+    required this.end,
+    required this.creditCents,
+    required this.debitCents,
+  });
+
+  final DateTime start;
+  final DateTime end;
+  final int creditCents;
+  final int debitCents;
 }
 
 final class _ChartLegend extends StatelessWidget {

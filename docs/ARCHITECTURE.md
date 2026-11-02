@@ -112,6 +112,9 @@ financeiros do snapshot.
   apresentação.
 - A evolução do período é calculada no domínio em pontos diários, usando apenas
   transações concluídas dentro do intervalo selecionado.
+- A apresentação mantém os pontos diários em períodos curtos e agrega apenas a
+  visualização em blocos semanais quando precisa exibir um mês completo. Os
+  totais e a fonte de dados não são alterados por esse agrupamento visual.
 
 ## 7. Navegação
 

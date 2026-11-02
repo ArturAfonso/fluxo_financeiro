@@ -11,7 +11,7 @@ para sua implementação, seus testes e sua documentação.
 | RF-DASH-01 | Exibir saldo disponível | Concluído |
 | RF-DASH-02 | Ocultar e exibir saldo, mantendo a preferência entre sessões | Concluído |
 | RF-DASH-03 | Exibir entradas e saídas do período selecionado | Concluído |
-| RF-DASH-04 | Exibir gráfico simples de evolução | Concluído com agrupamento diário de entradas e saídas |
+| RF-DASH-04 | Exibir gráfico simples de evolução | Concluído com pontos diários e agrupamento visual semanal em meses completos |
 | RF-DASH-05 | Exibir transações recentes e acesso ao extrato completo | Concluído |
 | RF-EXT-01 | Listar descrição, data, valor e status | Concluído |
 | RF-EXT-02 | Diferenciar entradas e saídas sem depender apenas de cor | Concluído |
@@ -89,7 +89,7 @@ para sua implementação, seus testes e sua documentação.
 | RQ-01 | Testar domínio, ViewModels e repositórios com mocks | Concluído |
 | RQ-02 | Testar widgets principais em loading, vazio e erro | Concluído |
 | RQ-03 | Ter ao menos um teste de integração do fluxo principal | Concluído |
-| RQ-04 | Atingir 70% de cobertura em domínio e ViewModels | Concluído; 76,50% e 79,06% |
+| RQ-04 | Atingir 70% de cobertura em domínio e ViewModels | Concluído; 76,50% e 83,25% |
 | RQ-05 | Gerar e entregar relatório de cobertura | Concluído em `docs/coverage.md` |
 | RQ-06 | Usar listas lazy, `const` e rebuilds controlados | Concluído |
 | RQ-07 | Oferecer semântica, contraste e escala de fonte adequados | Concluído |

@@ -3,7 +3,8 @@
 ## Demonstração sugerida — 7 minutos
 
 1. Abra o dashboard e mostre saldo, ocultação persistida, troca de mês, totais
-   e evolução diária no gráfico.
+   e evolução diária no gráfico. Em um mês completo, destaque que a View agrupa
+   os pontos por semana para manter a leitura sem alterar os dados do domínio.
 2. Atualize por gesto e explique que o conteúdo conhecido permanece disponível
    diante de falha, acompanhado do aviso de possível desatualização.
 3. Abra o extrato, combine tipo, status e período e faça uma busca por
@@ -46,9 +47,9 @@ a fonte local canônica para todas as telas.
 ## Evidências rápidas
 
 - `flutter analyze` sem issues;
-- 75 testes automatizados passando na CI; no host atual, 69 passam e 6 testes
+- 76 testes automatizados previstos na CI; no host atual, 70 passam e 6 testes
   Drift são ignorados pela ausência da biblioteca nativa SQLite;
 - fluxo instrumentado passando no emulador Android;
-- domínio com 76,50% e ViewModels com 79,06% de cobertura;
+- domínio com 76,50% e ViewModels com 83,25% de cobertura;
 - APK release ofuscado com símbolos separados;
 - CI com formatação, análise, testes, cobertura mínima e build Android.
