@@ -98,6 +98,11 @@ substitui o snapshot do Drift atomicamente. Dashboard, extrato e detalhes leem
 o mesmo conjunto de entidades. Cache, expiração, cursor e retry estão definidos
 no ADR 0009.
 
+O repositório também anexa às leituras o instante da última sincronização e a
+indicação de cache desatualizado. Esses metadados percorrem casos de uso e
+ViewModels até um aviso textual nas três telas, sem alterar os valores
+financeiros do snapshot.
+
 ## 6. Dinheiro e datas
 
 - Valores monetários são representados por `Money`, em centavos inteiros.
@@ -105,6 +110,8 @@ no ADR 0009.
 - Datas externas e persistidas são UTC.
 - Conversão para fuso local e formatação pt-BR ocorrem na fronteira de
   apresentação.
+- A evolução do período é calculada no domínio em pontos diários, usando apenas
+  transações concluídas dentro do intervalo selecionado.
 
 ## 7. Navegação
 

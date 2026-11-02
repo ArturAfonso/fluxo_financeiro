@@ -41,6 +41,10 @@ void main() {
     expect(summary.totalDebits, const Money.fromCents(200));
     expect(summary.netChange, const Money.fromCents(300));
     expect(summary.availableBalance, const Money.fromCents(2200));
+    expect(summary.dailyCashFlow, hasLength(10));
+    expect(summary.dailyCashFlow.first.credits, const Money.fromCents(500));
+    expect(summary.dailyCashFlow.last.debits, const Money.fromCents(200));
+    expect(summary.dailyCashFlow[5].credits, Money.zero);
   });
 
   test('respeita virada do dia convertida do fuso local para UTC', () {
@@ -65,6 +69,27 @@ void main() {
     final summary = calculate(snapshot: snapshot, period: localDayInUtc);
 
     expect(summary.totalCredits, const Money.fromCents(500));
+  });
+
+  test('preserva a sinalização de cache desatualizado no resumo', () {
+    final synchronizedAt = DateTime.utc(2026, 1, 2);
+    final period = UtcDateRange(
+      startInclusive: DateTime.utc(2026, 1, 1),
+      endExclusive: DateTime.utc(2026, 1, 3),
+    );
+    final snapshot = LedgerSnapshot(
+      openingBalance: Money.zero,
+      openingBalanceAt: DateTime.utc(2026, 1, 1),
+      asOf: DateTime.utc(2026, 1, 2),
+      transactions: const [],
+      lastSynchronizedAt: synchronizedAt,
+      isStale: true,
+    );
+
+    final summary = calculate(snapshot: snapshot, period: period);
+
+    expect(summary.isStale, isTrue);
+    expect(summary.lastSynchronizedAt, synchronizedAt);
   });
 }
 

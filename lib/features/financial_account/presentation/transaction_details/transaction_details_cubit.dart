@@ -10,14 +10,24 @@ final class TransactionDetailsState extends Equatable {
   const TransactionDetailsState({
     this.status = TransactionDetailsStatus.initial,
     this.transaction,
+    this.isStale = false,
+    this.lastSynchronizedAt,
     this.failure,
   });
   final TransactionDetailsStatus status;
   final FinancialTransaction? transaction;
+  final bool isStale;
+  final DateTime? lastSynchronizedAt;
   final Failure? failure;
 
   @override
-  List<Object?> get props => [status, transaction, failure];
+  List<Object?> get props => [
+    status,
+    transaction,
+    isStale,
+    lastSynchronizedAt,
+    failure,
+  ];
 }
 
 final class TransactionDetailsCubit extends Cubit<TransactionDetailsState> {
@@ -35,10 +45,12 @@ final class TransactionDetailsCubit extends Cubit<TransactionDetailsState> {
     );
     final result = await getTransactionDetails(transactionId);
     result.fold(
-      onSuccess: (transaction) => emit(
+      onSuccess: (details) => emit(
         TransactionDetailsState(
           status: TransactionDetailsStatus.success,
-          transaction: transaction,
+          transaction: details.transaction,
+          isStale: details.isStale,
+          lastSynchronizedAt: details.lastSynchronizedAt,
         ),
       ),
       onFailure: (failure) => emit(

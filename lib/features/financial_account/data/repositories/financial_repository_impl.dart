@@ -5,9 +5,9 @@ import 'package:fluxo_financeiro/features/financial_account/data/datasources/fin
 import 'package:fluxo_financeiro/features/financial_account/data/datasources/financial_remote_data_source.dart';
 import 'package:fluxo_financeiro/features/financial_account/data/dtos/dto_parsing_exception.dart';
 import 'package:fluxo_financeiro/features/financial_account/data/mappers/financial_mappers.dart';
-import 'package:fluxo_financeiro/features/financial_account/domain/entities/financial_transaction.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/entities/ledger_snapshot.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/entities/transaction_page.dart';
+import 'package:fluxo_financeiro/features/financial_account/domain/entities/transaction_details.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/filters/transaction_filter.dart';
 import 'package:fluxo_financeiro/features/financial_account/domain/repositories/financial_repository.dart';
 
@@ -51,14 +51,24 @@ final class FinancialRepositoryImpl implements FinancialRepository {
 
     final age = clock().difference(cached.cachedAt);
     if (age <= cacheTtl && !age.isNegative) {
-      return Success(cached.snapshot);
+      return Success(
+        cached.snapshot.withFreshness(
+          lastSynchronizedAt: cached.cachedAt,
+          isStale: false,
+        ),
+      );
     }
 
     final refreshResult = await refresh();
     if (refreshResult is FailureResult<void>) {
-      return Success(cached.snapshot);
+      return Success(
+        cached.snapshot.withFreshness(
+          lastSynchronizedAt: cached.cachedAt,
+          isStale: true,
+        ),
+      );
     }
-    return _readLedgerAfterRefresh(fallback: cached.snapshot);
+    return _readLedgerAfterRefresh(fallback: cached);
   }
 
   @override
@@ -70,7 +80,19 @@ final class FinancialRepositoryImpl implements FinancialRepository {
       return FailureResult(failure);
     }
     try {
-      return Success(await localDataSource.getTransactions(query));
+      final page = await localDataSource.getTransactions(query);
+      final ledger = readiness.fold(
+        onSuccess: (value) => value,
+        onFailure: (_) => throw StateError('Readiness already validated.'),
+      );
+      return Success(
+        TransactionPage(
+          items: page.items,
+          nextCursor: page.nextCursor,
+          lastSynchronizedAt: ledger.lastSynchronizedAt,
+          isStale: ledger.isStale,
+        ),
+      );
     } on FormatException {
       return const FailureResult(ValidationFailure(field: 'cursor'));
     } on Object {
@@ -79,7 +101,7 @@ final class FinancialRepositoryImpl implements FinancialRepository {
   }
 
   @override
-  Future<Result<FinancialTransaction>> getTransactionById(String id) async {
+  Future<Result<TransactionDetails>> getTransactionById(String id) async {
     final readiness = await getLedgerSnapshot();
     if (readiness case FailureResult<LedgerSnapshot>(:final failure)) {
       return FailureResult(failure);
@@ -90,7 +112,17 @@ final class FinancialRepositoryImpl implements FinancialRepository {
           ? FailureResult(
               NotFoundFailure(resource: 'transaction', identifier: id),
             )
-          : Success(transaction);
+          : Success(
+              readiness.fold(
+                onSuccess: (ledger) => TransactionDetails(
+                  transaction: transaction,
+                  lastSynchronizedAt: ledger.lastSynchronizedAt,
+                  isStale: ledger.isStale,
+                ),
+                onFailure: (_) =>
+                    throw StateError('Readiness already validated.'),
+              ),
+            );
     } on Object {
       return const FailureResult(CacheFailure());
     }
@@ -132,20 +164,35 @@ final class FinancialRepositoryImpl implements FinancialRepository {
   }
 
   Future<Result<LedgerSnapshot>> _readLedgerAfterRefresh({
-    LedgerSnapshot? fallback,
+    CachedLedger? fallback,
   }) async {
     try {
       final refreshed = await localDataSource.getLedger();
       if (refreshed != null) {
-        return Success(refreshed.snapshot);
+        return Success(
+          refreshed.snapshot.withFreshness(
+            lastSynchronizedAt: refreshed.cachedAt,
+            isStale: false,
+          ),
+        );
       }
       return fallback == null
           ? const FailureResult(CacheFailure())
-          : Success(fallback);
+          : Success(
+              fallback.snapshot.withFreshness(
+                lastSynchronizedAt: fallback.cachedAt,
+                isStale: true,
+              ),
+            );
     } on Object {
       return fallback == null
           ? const FailureResult(CacheFailure())
-          : Success(fallback);
+          : Success(
+              fallback.snapshot.withFreshness(
+                lastSynchronizedAt: fallback.cachedAt,
+                isStale: true,
+              ),
+            );
     }
   }
 

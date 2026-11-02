@@ -70,6 +70,29 @@ void main() {
         throwsArgumentError,
       );
     });
+
+    test('cache desatualizado exige instante de sincronização UTC', () {
+      expect(
+        () => LedgerSnapshot(
+          openingBalance: Money.zero,
+          openingBalanceAt: DateTime.utc(2026, 1, 1),
+          asOf: DateTime.utc(2026, 1, 3),
+          transactions: const [],
+          isStale: true,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => LedgerSnapshot(
+          openingBalance: Money.zero,
+          openingBalanceAt: DateTime.utc(2026, 1, 1),
+          asOf: DateTime.utc(2026, 1, 3),
+          transactions: const [],
+          lastSynchronizedAt: DateTime(2026, 1, 3),
+        ),
+        throwsArgumentError,
+      );
+    });
   });
 }
 

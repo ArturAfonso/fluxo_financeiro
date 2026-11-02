@@ -56,7 +56,7 @@ const _ledgerFixture = {
   'data': {
     'opening_balance_cents': 250000,
     'opening_balance_at': '2026-10-01T00:00:00Z',
-    'as_of': '2026-11-01T12:00:00Z',
+    'as_of': '2026-11-02T12:00:00Z',
     'transactions': [
       {
         'id': 'tx_006',
@@ -71,7 +71,7 @@ const _ledgerFixture = {
         'id': 'tx_005',
         'description': 'Compra no mercado',
         'amount_cents': 24890,
-        'occurred_at': '2026-10-31T18:42:00Z',
+        'occurred_at': '2026-11-02T10:15:00Z',
         'type': 'debit',
         'status': 'completed',
         'metadata': {'merchant': 'Mercado Fictício'},

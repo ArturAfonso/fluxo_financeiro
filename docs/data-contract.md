@@ -27,7 +27,7 @@ API não oferece um extrato bancário.
   "data": {
     "opening_balance_cents": 125000,
     "opening_balance_at": "2026-10-01T00:00:00Z",
-    "as_of": "2026-11-01T12:00:00Z",
+    "as_of": "2026-11-02T12:00:00Z",
     "transactions": []
   }
 }

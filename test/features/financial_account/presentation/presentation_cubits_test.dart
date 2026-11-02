@@ -62,9 +62,14 @@ void main() {
     'DashboardCubit carrega resumo, recentes e preferência de saldo',
     () async {
       final preferences = _MemoryPreferences()..balanceVisible = false;
-      when(
-        repository.getLedgerSnapshot,
-      ).thenAnswer((_) async => Success(_snapshot));
+      when(repository.getLedgerSnapshot).thenAnswer(
+        (_) async => Success(
+          _snapshot.withFreshness(
+            lastSynchronizedAt: DateTime.utc(2026, 11, 1, 9),
+            isStale: true,
+          ),
+        ),
+      );
       when(() => repository.getTransactions(any())).thenAnswer(
         (_) async => Success(TransactionPage(items: [_transaction])),
       );
@@ -82,6 +87,7 @@ void main() {
 
       expect(cubit.state.status, DashboardStatus.success);
       expect(cubit.state.summary, isNotNull);
+      expect(cubit.state.summary?.isStale, isTrue);
       expect(cubit.state.recentTransactions, [_transaction]);
       expect(cubit.state.balanceVisible, isFalse);
 
@@ -128,6 +134,8 @@ void main() {
           TransactionPage(
             items: [_transaction],
             nextCursor: query.page.cursor == null ? 'next' : null,
+            lastSynchronizedAt: DateTime.utc(2026, 11, 1, 9),
+            isStale: true,
           ),
         );
       });
@@ -149,6 +157,8 @@ void main() {
       expect(cubit.state.status, StatementStatus.success);
       expect(cubit.state.filter?.types, const {TransactionType.credit});
       expect(cubit.state.filter?.statuses, const {TransactionStatus.completed});
+      expect(cubit.state.isStale, isTrue);
+      expect(cubit.state.lastSynchronizedAt, DateTime.utc(2026, 11, 1, 9));
       verify(() => repository.getTransactions(any())).called(3);
     },
   );
